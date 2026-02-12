@@ -3,6 +3,7 @@ import { createPublicClient, http, parseEther, keccak256, encodePacked } from 'v
 import { base } from 'viem/chains';
 import { Redis } from '@upstash/redis';
 import { verifyMessage } from 'viem';
+import { logicGates } from '@/lib/logicGates';
 
 // Production Logic Handshake
 // Credentials provided by Jerry
@@ -38,13 +39,13 @@ export async function POST(req: NextRequest) {
 
     // 2. Verify Wallet Signature
     const message = `Verify Human Proof Challenge: ${challengeId}`;
-    const recoveredAddress = await verifyMessage({
+    const isSignatureValid = await verifyMessage({
       address: userAddress as `0x${string}`,
       message,
       signature: signature as `0x${string}`,
     });
 
-    if (recoveredAddress.toLowerCase() !== userAddress.toLowerCase()) {
+    if (!isSignatureValid) {
       return NextResponse.json({ success: false, error: 'Invalid signature' }, { status: 403 });
     }
 
@@ -54,13 +55,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Friction fee transaction failed or not found' }, { status: 400 });
     }
     
-    // Additional fee check (optional but recommended)
+    // Additional fee check
     const tx = await baseClient.getTransaction({ hash: txHash as `0x${string}` });
     if (tx.value < MIN_FEE) {
        return NextResponse.json({ success: false, error: 'Insufficient friction fee paid' }, { status: 400 });
     }
 
-    // 4. Success Response
+    // 4. Logic Gate Check
+    const challengeData = await redis.get<any>(`challenge:${challengeId}`);
+    const solution = await redis.get<any>(`solution:${challengeId}`);
+    
+    if (!challengeData || !solution) {
+      return NextResponse.json({ success: false, error: 'Challenge data missing' }, { status: 400 });
+    }
+
+    const gate = logicGates[challengeData.logicType];
+    const isHuman = gate.verify(challengeData.payload, response);
+
+    if (!isHuman) {
+      return NextResponse.json({ success: false, error: 'Logic handshake failed' }, { status: 400 });
+    }
+
+    // 5. Success Response
     return NextResponse.json({
       success: true,
       message: 'Human verified! Welcome to the Archive.',
@@ -76,6 +92,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
 
 export async function OPTIONS() {
   return new NextResponse(null, {
