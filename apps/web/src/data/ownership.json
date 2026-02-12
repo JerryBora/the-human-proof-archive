@@ -1,20 +1,20 @@
 [
   {
     "nftId": 1,
-    "owner": "0x882a...f3e1",
-    "mintedAt": "2026-02-12T01:15:22.441Z",
-    "proofToken": "HP_ALPHA_MOCK_TOKEN_ALPHA"
+    "owner": null,
+    "mintedAt": null,
+    "proofToken": null
   },
   {
     "nftId": 2,
-    "owner": "0xdead...beef",
-    "mintedAt": "2026-02-12T02:00:00.000Z",
-    "proofToken": "HP_ALPHA_MOCK_TOKEN"
+    "owner": null,
+    "mintedAt": null,
+    "proofToken": null
   },
   {
     "nftId": 3,
-    "owner": "0xcc21...881c",
-    "mintedAt": "2026-02-12T01:30:45.992Z",
-    "proofToken": "HP_ALPHA_MOCK_TOKEN_GAMMA"
+    "owner": null,
+    "mintedAt": null,
+    "proofToken": null
   }
 ]
