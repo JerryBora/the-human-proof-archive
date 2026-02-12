@@ -14,14 +14,28 @@ export async function POST(request: Request) {
   try {
     const { nftId, wallet, verifyToken } = await request.json();
 
-    // 1. Production Credential Check
-    if (redis && verifyToken) {
-      const credentialKey = `credential:${wallet}`;
-      const storedCredential = await redis.get(credentialKey);
-      
-      if (!storedCredential) {
-        return NextResponse.json({ success: false, error: "Handshake Required", message: "No verified handshake found for this address." }, { status: 401 });
+    if (!nftId || !wallet || !verifyToken) {
+      return NextResponse.json({ success: false, error: "Missing fields" }, { status: 400 });
+    }
+
+    // 1. Concurrency Lock & Replay Protection
+    if (redis) {
+      const lockKey = `lock:nft:${nftId}`;
+      const isLocked = await redis.set(lockKey, '1', { nx: true, ex: 30 });
+      if (!isLocked) {
+        return NextResponse.json({ success: false, error: "Concurrency Error", message: "This artifact is being processed by another agent." }, { status: 429 });
       }
+
+      const credentialKey = `credential:${wallet}`;
+      const stored: any = await redis.get(credentialKey);
+      
+      if (!stored || stored.token !== verifyToken) {
+        await redis.del(lockKey);
+        return NextResponse.json({ success: false, error: "Handshake Invalid", message: "No active verified handshake found for this token." }, { status: 401 });
+      }
+
+      // Consume the token so it can't be used again
+      await redis.del(credentialKey);
     }
 
     // 2. Load Archival Database
@@ -39,11 +53,16 @@ export async function POST(request: Request) {
     // 3. Update Archival Record
     nft.owner = wallet;
     nft.mintedAt = new Date().toISOString();
-    nft.proofToken = verifyToken || "HP_ALPHA_PROD_VERIFIED";
+    nft.proofToken = verifyToken;
 
     fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
 
-    // 4. Success Response
+    // 4. Cleanup Lock
+    if (redis) {
+      await redis.del(`lock:nft:${nftId}`);
+    }
+
+    // 5. Success Response
     return NextResponse.json({ 
       success: true, 
       artifact_id: nftId,

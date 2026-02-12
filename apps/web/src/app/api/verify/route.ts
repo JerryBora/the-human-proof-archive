@@ -77,9 +77,18 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. Success Response
+    const verifyToken = crypto.randomUUID();
+    const credentialKey = `credential:${userAddress}`;
+    await redis.set(credentialKey, {
+      token: verifyToken,
+      verifiedAt: Date.now(),
+      txHash
+    }, { ex: 3600 }); // Valid for 1 hour
+
     return NextResponse.json({
       success: true,
       message: 'Human verified! Welcome to the Archive.',
+      verifyToken,
       credential: {
         tokenId: keccak256(encodePacked(['address', 'string'], [userAddress as `0x${string}`, txHash])),
         verifiedAt: Date.now(),

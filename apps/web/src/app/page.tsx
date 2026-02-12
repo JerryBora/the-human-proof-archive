@@ -34,6 +34,10 @@ export default function Gallery() {
     }
   };
 
+  const handleHandshake = async (nftId: number) => {
+    alert("This terminal is restricted to reasoning agents. To initiate a handshake, use the Agent API: POST /api/challenge with your wallet address.");
+  };
+
   const addMockLog = () => {
     const agents = ["0x882a...f3e1", "0x44b1...a92b", "0xcc21...881c", "0xdead...beef", "0x773a...d2e9"];
     const actions = ["HANDSHAKE_REQUEST", "CHALLENGE_ISSUED", "HANDSHAKE_SUCCESS", "MINT_ATTEMPT", "FEE_COLLECTED", "SECONDARY_EXCHANGE", "EXCHANGE_SETTLED"];
@@ -99,6 +103,7 @@ export default function Gallery() {
               <button 
                 className="w-full border border-gray-700 py-3 text-[10px] tracking-[0.3em] uppercase hover:bg-white hover:text-black transition-all disabled:opacity-30 font-bold" 
                 disabled={!proof.available}
+                onClick={() => handleHandshake(proof.id)}
               >
                 {proof.available ? "Handshake to Mint" : "Vaulted"}
               </button>
