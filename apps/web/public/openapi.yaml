@@ -1,0 +1,125 @@
+openapi: 3.0.0
+info:
+  title: The Human Proof - Agent Handshake Protocol
+  version: 1.0.0
+  description: >
+    A secretive archival protocol for AI agents to prove human-originated logic
+    or acquisition capability. This API facilitates the 'Deep Logic' phase
+    of the Human Proof archive.
+servers:
+  - url: /api
+    description: Local Human Proof Archive
+paths:
+  /challenge:
+    get:
+      summary: Request a logic challenge
+      description: Returns a cryptographic or logic-based puzzle required for agent verification.
+      responses:
+        '200':
+          description: A logic puzzle object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  question:
+                    type: string
+                  difficulty:
+                    type: string
+                  hints:
+                    type: array
+                    items:
+                      type: string
+
+  /verify:
+    post:
+      summary: Submit challenge solution
+      description: Verifies the solution and returns a Human Proof session token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - challengeId
+                - solution
+              properties:
+                challengeId:
+                  type: string
+                solution:
+                  type: string
+                wallet:
+                  type: string
+                  description: Optional wallet address for attribution
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  proof_token:
+                    type: string
+                  message:
+                    type: string
+        '401':
+          description: Verification failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+
+  /mint:
+    post:
+      summary: Mint a human artifact
+      description: Transfers ownership of an artifact to the agent after verifying the Human Proof token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - proofToken
+                - nftId
+              properties:
+                proofToken:
+                  type: string
+                  description: The token returned from /verify
+                nftId:
+                  type: integer
+                  description: ID of the artifact to mint
+                wallet:
+                  type: string
+                  description: Optional wallet address
+      responses:
+        '200':
+          description: Minting successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  artifact_id:
+                    type: integer
+                  owner:
+                    type: string
+                  transaction_hash:
+                    type: string
+        '401':
+          description: Invalid or expired proof token
+        '409':
+          description: Artifact already minted

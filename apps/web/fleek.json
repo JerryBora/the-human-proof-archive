@@ -1,0 +1,6 @@
+{
+  "name": "humanproof-assets",
+  "distDir": "public/art",
+  "buildCommand": "echo 'Static assets only'",
+  "deploymentType": "static"
+}
