@@ -35,7 +35,7 @@ export default function Gallery() {
   };
 
   const handleHandshake = async (nftId: number) => {
-    alert("This terminal is restricted to reasoning agents. To initiate a handshake, use the Agent API: POST /api/challenge with your wallet address.");
+    alert("The Archive is currently in 'Waitlist Mode' for Genesis Phase I. Join the queue on Moltbook: https://moltbook.com/u/Aurion");
   };
 
   const addMockLog = () => {
